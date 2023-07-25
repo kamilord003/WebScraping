@@ -17,40 +17,38 @@ pagination = [ int(s) for s in pagination.split() if s.isdigit()][0]
 
 records = []
 
-for product in range(1,pagination+1):
+for product in range(1, pagination + 1):
     if product != pagination:
         next_page_button = driver.find_element(By.CSS_SELECTOR, "a[title='Siguiente']")
 
     title_products = driver.find_elements(By.XPATH, "//h2[@class='ui-search-item__title shops__item-title']")
-    title_products = [     title.text  for title in title_products            ]
+    title_products = [title.text for title in title_products]
 
-
-    try:
-        price_products = driver.find_elements(By.XPATH, "//div[@class='ui-search-result__content-columns shops__content-columns']//div[@class='ui-search-result__content-column ui-search-result__content-column--left shops__content-columns-left']/div[1]/div//div[@class='ui-search-price__second-line shops__price-second-line']//span[@class='andes-money-amount ui-search-price__part shops__price-part ui-search-price__part--medium andes-money-amount--cents-superscript']//span[@class='andes-money-amount__fraction']")
-        price_products = [ price.text for price in price_products ]
-    except:
-        price_products = ['0']
-
+    price_products = driver.find_elements(By.XPATH, "//div[@class='ui-search-result__content-columns shops__content-columns']//div[@class='ui-search-result__content-column ui-search-result__content-column--left shops__content-columns-left']/div[1]/div//div[@class='ui-search-price__second-line shops__price-second-line']//span[@class='andes-money-amount ui-search-price__part shops__price-part ui-search-price__part--medium andes-money-amount--cents-superscript']//span[@class='andes-money-amount__fraction']")
+    price_products_temp = []
+    for price in price_products:
+        try:
+            price_text = price.text
+        except:
+            price_text = None  # Placeholder value for missing price
+        price_products_temp.append(price_text)
 
     links_products = driver.find_elements(By.XPATH, "//div[@class='andes-carousel-snapped__slide andes-carousel-snapped__slide--active']//a[1]")
-    links_products = [ link.get_attribute("href") for link in links_products   ]
+    links_products = [link.get_attribute("href") for link in links_products]
 
+    # Check if all arrays have the same length
+    if len(title_products) == len(price_products_temp) == len(links_products):
+        data_products = {
+            "name_product": title_products,
+            "price_product": price_products_temp,
+            "link_product": links_products
+        }
 
-    data_products = {
+        df = pd.DataFrame(data_products)
+        records.append(df)
+    else:
+        print("Arrays have different lengths. Skipping current page.")
 
-        "name_product":title_products,
-        "price_product":price_products,
-        "link_product":links_products
-
-    }
-
-    print(len(title_products))
-    print(len(price_products))
-    print(len(links_products))
-    df =  pd.DataFrame(data_products)
-    print(product)
-    print(pagination)
-    records.append(df)
     if product != pagination:
         driver.execute_script("arguments[0].click()", next_page_button)
 
