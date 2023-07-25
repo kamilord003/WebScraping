@@ -17,19 +17,22 @@ pagination = [ int(s) for s in pagination.split() if s.isdigit()][0]
 
 records = []
 
-for _product in range(1,pagination+1):
-    if _product != pagination:
+for product in range(1,pagination+1):
+    if product != pagination:
         next_page_button = driver.find_element(By.CSS_SELECTOR, "a[title='Siguiente']")
 
-    title_products = driver.find_elements(By.XPATH, "//h2[@class='ui-search-item__title']")
+    title_products = driver.find_elements(By.XPATH, "//h2[@class='ui-search-item__title shops__item-title']")
     title_products = [     title.text  for title in title_products            ]
 
 
-    price_products = driver.find_elements(By.XPATH, "//li[@class='ui-search-layout__item']//div[@class='ui-search-result__content-columns']//div[@class='ui-search-result__content-column ui-search-result__content-column--left']/div[1]/div//div[@class='ui-search-price__second-line']//span[@class='price-tag-amount']//span[2]")
-    price_products = [ price.text for price in price_products   ]
+    try:
+        price_products = driver.find_elements(By.XPATH, "//div[@class='ui-search-result__content-columns shops__content-columns']//div[@class='ui-search-result__content-column ui-search-result__content-column--left shops__content-columns-left']/div[1]/div//div[@class='ui-search-price__second-line shops__price-second-line']//span[@class='andes-money-amount ui-search-price__part shops__price-part ui-search-price__part--medium andes-money-amount--cents-superscript']//span[@class='andes-money-amount__fraction']")
+        price_products = [ price.text for price in price_products ]
+    except:
+        price_products = ['0']
 
 
-    links_products = driver.find_elements(By.XPATH, "//div[@class='ui-search-item__group ui-search-item__group--title']//a[1]")
+    links_products = driver.find_elements(By.XPATH, "//div[@class='andes-carousel-snapped__slide andes-carousel-snapped__slide--active']//a[1]")
     links_products = [ link.get_attribute("href") for link in links_products   ]
 
 
@@ -41,13 +44,17 @@ for _product in range(1,pagination+1):
 
     }
 
-
+    print(len(title_products))
+    print(len(price_products))
+    print(len(links_products))
     df =  pd.DataFrame(data_products)
+    print(product)
+    print(pagination)
     records.append(df)
-    if _product != pagination:
+    if product != pagination:
         driver.execute_script("arguments[0].click()", next_page_button)
 
 df = pd.concat(records)
 df.to_csv("PRODUCTOS.csv")
-time.sleep(4)
+time.sleep(2)
 driver.close()
